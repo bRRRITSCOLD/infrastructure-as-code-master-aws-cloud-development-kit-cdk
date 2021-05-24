@@ -9,6 +9,10 @@ export class InfrastructureAsCodeMasterAwsCloudDevelopmentKitCdkStack extends cd
       encryption: BucketEncryption.S3_MANAGED
     });
 
+    new cdk.CfnOutput(this, 'MySimpleAppBucketNameExport', {
+      value: bucket.bucketName,
+      exportName: 'MySimpleAppBucketName'
+    })
     // The code that defines your stack goes here
   }
 }
