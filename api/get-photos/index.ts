@@ -7,7 +7,7 @@ const s3 = new S3()
 
 async function generateUrl(object: S3.Object): Promise<{ filename: string, url: string }> {
   const url = await s3.getSignedUrlPromise('getObject', {
-    BucketName: bucketName,
+    Bucket: bucketName,
     Key: object.Key!,
     Expires: (24 * 60 * 60)
   })
@@ -23,7 +23,7 @@ async function getPhotos(event: APIGatewayProxyEventV2, context: Context): Promi
 
     return {
       statusCode: 200,
-      body: JSON.stringify(objects.Contents)
+      body: JSON.stringify(await Promise.all(objects.Contents!.map((object) => generateUrl(object))))
     }
   } catch (err) {
     return {
