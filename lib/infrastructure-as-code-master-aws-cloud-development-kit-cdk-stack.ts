@@ -7,6 +7,7 @@ import { BucketDeployment, Source } from '@aws-cdk/aws-s3-deployment';
 import { PolicyStatement } from '@aws-cdk/aws-route53/node_modules/@aws-cdk/aws-iam';
 import { CorsHttpMethod, HttpApi, HttpMethod } from '@aws-cdk/aws-apigatewayv2';
 import { LambdaProxyIntegration } from '@aws-cdk/aws-apigatewayv2-integrations';
+import { CloudFrontWebDistribution } from '@aws-cdk/aws-cloudfront';
 
 export class InfrastructureAsCodeMasterAwsCloudDevelopmentKitCdkStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
@@ -34,6 +35,17 @@ export class InfrastructureAsCodeMasterAwsCloudDevelopmentKitCdkStack extends cd
         Source.asset(path.join(__dirname, '..', 'frontend', 'build'))
       ],
       destinationBucket: frontendBucket as any
+    });
+
+    const frontEndcloudFrontDistribution = new CloudFrontWebDistribution(this, 'MySimpleAppFrontendCloudFrontDistribution', {
+      originConfigs: [
+        {
+          s3OriginSource: {
+            s3BucketSource: frontendBucket
+          },
+          behaviors: [{ isDefaultBehavior: true }]
+        }
+      ]
     });
 
     const getPhotos = new lambda.NodejsFunction(this, 'MySimpleAppLambda', {
@@ -84,7 +96,11 @@ export class InfrastructureAsCodeMasterAwsCloudDevelopmentKitCdkStack extends cd
       value: frontendBucket.bucketName,
       exportName: 'MySimpleAppFrontendBucketName'
     });
-    frontendBucketDeployment
+
+    new cdk.CfnOutput(this, 'MySimpleAppFrontendCloudFrontDistributionUrlExport', {
+      value: frontEndcloudFrontDistribution.distributionDomainName,
+      exportName: 'MySimpleAppFrontendCloudFrontDistributionUrl'
+    });
 
     new cdk.CfnOutput(this, 'MySimpleAppHttpApiUrlExport', {
       value: httpApi.url!,
