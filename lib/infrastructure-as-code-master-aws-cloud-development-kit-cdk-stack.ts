@@ -30,13 +30,6 @@ export class InfrastructureAsCodeMasterAwsCloudDevelopmentKitCdkStack extends cd
       publicReadAccess: true
     });
 
-    const frontendBucketDeployment = new BucketDeployment(this, 'MySimpleAppFrontendBucketDeployment', {
-      sources: [
-        Source.asset(path.join(__dirname, '..', 'frontend', 'build'))
-      ],
-      destinationBucket: frontendBucket as any
-    });
-
     const frontEndcloudFrontDistribution = new CloudFrontWebDistribution(this, 'MySimpleAppFrontendCloudFrontDistribution', {
       originConfigs: [
         {
@@ -46,6 +39,14 @@ export class InfrastructureAsCodeMasterAwsCloudDevelopmentKitCdkStack extends cd
           behaviors: [{ isDefaultBehavior: true }]
         }
       ]
+    });
+
+    const frontendBucketDeployment = new BucketDeployment(this, 'MySimpleAppFrontendBucketDeployment', {
+      sources: [
+        Source.asset(path.join(__dirname, '..', 'frontend', 'build'))
+      ],
+      destinationBucket: frontendBucket as any,
+      distribution: frontEndcloudFrontDistribution
     });
 
     const getPhotos = new lambda.NodejsFunction(this, 'MySimpleAppLambda', {
