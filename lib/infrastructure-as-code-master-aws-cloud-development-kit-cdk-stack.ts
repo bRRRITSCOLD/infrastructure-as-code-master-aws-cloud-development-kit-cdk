@@ -12,15 +12,28 @@ export class InfrastructureAsCodeMasterAwsCloudDevelopmentKitCdkStack extends cd
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    const bucket = new Bucket(this, 'MySimpleAppBucket', {
+    const photosBucket = new Bucket(this, 'MySimpleAppPhotosBucket', {
       encryption: BucketEncryption.S3_MANAGED
     });
 
-    const bucketDeployment = new BucketDeployment(this, 'MySimplePhotos', {
+    const bucketDeployment = new BucketDeployment(this, 'MySimpleAppPhotosBucketDeployment', {
       sources: [
         Source.asset(path.join(__dirname, '..', 'photos'))
       ],
-      destinationBucket: bucket as any
+      destinationBucket: photosBucket as any
+    });
+
+    const frontendBucket = new Bucket(this, 'MySimpleAppFrontendBucket', {
+      encryption: BucketEncryption.S3_MANAGED,
+      websiteIndexDocument: 'index.html',
+      publicReadAccess: true
+    });
+
+    const frontendBucketDeployment = new BucketDeployment(this, 'MySimpleAppFrontendBucketDeployment', {
+      sources: [
+        Source.asset(path.join(__dirname, '..', 'frontend', 'build'))
+      ],
+      destinationBucket: frontendBucket as any
     });
 
     const getPhotos = new lambda.NodejsFunction(this, 'MySimpleAppLambda', {
@@ -28,16 +41,16 @@ export class InfrastructureAsCodeMasterAwsCloudDevelopmentKitCdkStack extends cd
       entry: path.join(__dirname, '..', 'api', 'get-photos', 'index.ts'),
       handler: 'getPhotos',
       environment: {
-        PHOTO_BUCKET_NAME: bucket.bucketName,
+        PHOTO_BUCKET_NAME: photosBucket.bucketName,
       }
     });
 
     const bucketContainerPermissions = new PolicyStatement();
-    bucketContainerPermissions.addResources(bucket.bucketArn);
+    bucketContainerPermissions.addResources(photosBucket.bucketArn);
     bucketContainerPermissions.addActions('s3:ListBucket');
 
     const bucketPermissions = new PolicyStatement();
-    bucketPermissions.addResources(`${bucket.bucketArn}/*`)
+    bucketPermissions.addResources(`${photosBucket.bucketArn}/*`)
     bucketPermissions.addActions('s3:GetObject', 's3:PutObject');
   
     getPhotos.addToRolePolicy(bucketPermissions)
@@ -62,10 +75,16 @@ export class InfrastructureAsCodeMasterAwsCloudDevelopmentKitCdkStack extends cd
       integration: lambdaIntegration
     });
 
-    new cdk.CfnOutput(this, 'MySimpleAppBucketNameExport', {
-      value: bucket.bucketName,
-      exportName: 'MySimpleAppBucketName'
+    new cdk.CfnOutput(this, 'MySimpleAppPhotoBucketNameExport', {
+      value: photosBucket.bucketName,
+      exportName: 'MySimpleAppPhotBucketName'
     });
+
+    new cdk.CfnOutput(this, 'MySimpleAppFrontendBucketNameExport', {
+      value: frontendBucket.bucketName,
+      exportName: 'MySimpleAppFrontendBucketName'
+    });
+    frontendBucketDeployment
 
     new cdk.CfnOutput(this, 'MySimpleAppHttpApiUrlExport', {
       value: httpApi.url!,
