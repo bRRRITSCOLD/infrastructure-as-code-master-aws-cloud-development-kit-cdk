@@ -9,24 +9,17 @@ import { CorsHttpMethod, HttpApi, HttpMethod } from '@aws-cdk/aws-apigatewayv2';
 import { LambdaProxyIntegration } from '@aws-cdk/aws-apigatewayv2-integrations';
 import { CloudFrontWebDistribution } from '@aws-cdk/aws-cloudfront';
 import { AutoDeleteBucket } from '@mobileposse/auto-delete-bucket';
+import { S3BucketWithDeploy } from './s3-bucket-with-deploy';
 
-interface InfrastructureAsCodeMasterAwsCloudDevelopmentKitCdkStackPropsInterface extends cdk.StackProps {
-  envName: string;
-}
+interface InfrastructureAsCodeMasterAwsCloudDevelopmentKitCdkStackPropsInterface extends cdk.StackProps {}
 export class InfrastructureAsCodeMasterAwsCloudDevelopmentKitCdkStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: InfrastructureAsCodeMasterAwsCloudDevelopmentKitCdkStackPropsInterface) {
     super(scope, id, props);
 
-    const photosBucket = new AutoDeleteBucket(this, 'MySimpleAppPhotosBucket', {
-      encryption: props?.envName === 'prod' ? BucketEncryption.S3_MANAGED : BucketEncryption.UNENCRYPTED
-    });
-
-    const bucketDeployment = new BucketDeployment(this, 'MySimpleAppPhotosBucketDeployment', {
-      sources: [
-        Source.asset(path.join(__dirname, '..', 'photos'))
-      ],
-      destinationBucket: photosBucket as any
-    });
+    const { bucket: photosBucket } = new S3BucketWithDeploy(this, 'MySimpleAppPhotosBucket', {
+      deploymentSources: ['..', 'photos'],
+      encryption: BucketEncryption.S3_MANAGED
+    })
 
     const frontendBucket = new AutoDeleteBucket(this, 'MySimpleAppFrontendBucket', {
       encryption: BucketEncryption.S3_MANAGED,
@@ -94,22 +87,26 @@ export class InfrastructureAsCodeMasterAwsCloudDevelopmentKitCdkStack extends cd
 
     new cdk.CfnOutput(this, 'MySimpleAppPhotoBucketNameExport', {
       value: photosBucket.bucketName,
-      exportName: `MySimpleAppPhotBucketName${props?.envName}`
+      // exportName: `MySimpleAppPhotBucketName${props?.envName}`
+      exportName: `MySimpleAppPhotBucketName`
     });
 
     new cdk.CfnOutput(this, 'MySimpleAppFrontendBucketNameExport', {
       value: frontendBucket.bucketName,
-      exportName: `MySimpleAppFrontendBucketName${props?.envName}`
+      // exportName: `MySimpleAppFrontendBucketName${props?.envName}`
+      exportName: `MySimpleAppFrontendBucketName`
     });
 
     new cdk.CfnOutput(this, 'MySimpleAppFrontendCloudFrontDistributionUrlExport', {
       value: frontEndcloudFrontDistribution.distributionDomainName,
-      exportName: `MySimpleAppFrontendCloudFrontDistributionUrl${props?.envName}`
+      // exportName: `MySimpleAppFrontendCloudFrontDistributionUrl${props?.envName}`
+      exportName: `MySimpleAppFrontendCloudFrontDistributionUrl`
     });
 
     new cdk.CfnOutput(this, 'MySimpleAppHttpApiUrlExport', {
       value: httpApi.url!,
-      exportName: `MySimpleAppHttpApiUrl${props?.envName}`
+      // exportName: `MySimpleAppHttpApiUrl${props?.envName}`
+      exportName: `MySimpleAppHttpApiUrl`
     });
 
     // The code that defines your stack goes here
