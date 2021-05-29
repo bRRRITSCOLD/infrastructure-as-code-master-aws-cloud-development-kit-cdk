@@ -10,12 +10,15 @@ import { LambdaProxyIntegration } from '@aws-cdk/aws-apigatewayv2-integrations';
 import { CloudFrontWebDistribution } from '@aws-cdk/aws-cloudfront';
 import { AutoDeleteBucket } from '@mobileposse/auto-delete-bucket';
 
+interface InfrastructureAsCodeMasterAwsCloudDevelopmentKitCdkStackPropsInterface extends cdk.StackProps {
+  envName: string;
+}
 export class InfrastructureAsCodeMasterAwsCloudDevelopmentKitCdkStack extends cdk.Stack {
-  constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: cdk.Construct, id: string, props?: InfrastructureAsCodeMasterAwsCloudDevelopmentKitCdkStackPropsInterface) {
     super(scope, id, props);
 
     const photosBucket = new AutoDeleteBucket(this, 'MySimpleAppPhotosBucket', {
-      encryption: BucketEncryption.S3_MANAGED
+      encryption: props?.envName === 'prod' ? BucketEncryption.S3_MANAGED : BucketEncryption.UNENCRYPTED
     });
 
     const bucketDeployment = new BucketDeployment(this, 'MySimpleAppPhotosBucketDeployment', {
@@ -91,22 +94,22 @@ export class InfrastructureAsCodeMasterAwsCloudDevelopmentKitCdkStack extends cd
 
     new cdk.CfnOutput(this, 'MySimpleAppPhotoBucketNameExport', {
       value: photosBucket.bucketName,
-      exportName: 'MySimpleAppPhotBucketName'
+      exportName: `MySimpleAppPhotBucketName${props?.envName}`
     });
 
     new cdk.CfnOutput(this, 'MySimpleAppFrontendBucketNameExport', {
       value: frontendBucket.bucketName,
-      exportName: 'MySimpleAppFrontendBucketName'
+      exportName: `MySimpleAppFrontendBucketName${props?.envName}`
     });
 
     new cdk.CfnOutput(this, 'MySimpleAppFrontendCloudFrontDistributionUrlExport', {
       value: frontEndcloudFrontDistribution.distributionDomainName,
-      exportName: 'MySimpleAppFrontendCloudFrontDistributionUrl'
+      exportName: `MySimpleAppFrontendCloudFrontDistributionUrl${props?.envName}`
     });
 
     new cdk.CfnOutput(this, 'MySimpleAppHttpApiUrlExport', {
       value: httpApi.url!,
-      exportName: 'MySimpleAppHttpApiUrl'
+      exportName: `MySimpleAppHttpApiUrl${props?.envName}`
     });
 
     // The code that defines your stack goes here
