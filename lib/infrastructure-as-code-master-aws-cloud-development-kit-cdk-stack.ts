@@ -1,4 +1,4 @@
-import { Bucket, BucketEncryption } from '@aws-cdk/aws-s3';
+import { BucketEncryption } from '@aws-cdk/aws-s3';
 import * as cdk from '@aws-cdk/core';
 import * as lambda from '@aws-cdk/aws-lambda-nodejs';
 import { Runtime } from '@aws-cdk/aws-lambda';
@@ -8,12 +8,13 @@ import { PolicyStatement } from '@aws-cdk/aws-route53/node_modules/@aws-cdk/aws-
 import { CorsHttpMethod, HttpApi, HttpMethod } from '@aws-cdk/aws-apigatewayv2';
 import { LambdaProxyIntegration } from '@aws-cdk/aws-apigatewayv2-integrations';
 import { CloudFrontWebDistribution } from '@aws-cdk/aws-cloudfront';
+import { AutoDeleteBucket } from '@mobileposse/auto-delete-bucket';
 
 export class InfrastructureAsCodeMasterAwsCloudDevelopmentKitCdkStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    const photosBucket = new Bucket(this, 'MySimpleAppPhotosBucket', {
+    const photosBucket = new AutoDeleteBucket(this, 'MySimpleAppPhotosBucket', {
       encryption: BucketEncryption.S3_MANAGED
     });
 
@@ -24,7 +25,7 @@ export class InfrastructureAsCodeMasterAwsCloudDevelopmentKitCdkStack extends cd
       destinationBucket: photosBucket as any
     });
 
-    const frontendBucket = new Bucket(this, 'MySimpleAppFrontendBucket', {
+    const frontendBucket = new AutoDeleteBucket(this, 'MySimpleAppFrontendBucket', {
       encryption: BucketEncryption.S3_MANAGED,
       websiteIndexDocument: 'index.html',
       publicReadAccess: true
